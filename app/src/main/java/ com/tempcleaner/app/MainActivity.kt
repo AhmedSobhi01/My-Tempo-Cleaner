@@ -38,6 +38,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -493,10 +494,77 @@ fun HomeScreen(tick: Int, onRequestAccess: () -> Unit) {
                 }
             }
 
+            SectionCard {
+                val serviceOn = remember(tick) { CacheCleanerService.instance != null }
+                Text(
+                    "تنظيف كاش كل التطبيقات",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "يفتح شاشة كل تطبيق ويضغط مسح الذاكرة المؤقتة تلقائيًا. محتاج تفعيل خدمة إمكانية الوصول.",
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(12.dp))
+                if (!serviceOn) {
+                    OutlinedButton(
+                        onClick = {
+                            ctx.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text("تفعيل الخدمة")
+                    }
+                } else if (AppsCleanState.running) {
+                    Text(
+                        "جاري التنظيف: ${AppsCleanState.done} من ${AppsCleanState.total}",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = {
+                            if (AppsCleanState.total == 0) 0f
+                            else AppsCleanState.done.toFloat() / AppsCleanState.total
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedButton(
+                        onClick = { CacheCleanerService.instance?.cancel() },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text("إيقاف")
+                    }
+                } else {
+                    Button(
+                        onClick = { CacheCleanerService.instance?.startCleaning() },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text("ابدأ تنظيف كاش التطبيقات")
+                    }
+                    if (AppsCleanState.cleaned > 0) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "آخر مرة: تم تنظيف ${AppsCleanState.cleaned} تطبيق",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
             Text(
-                "ملاحظة: أندرويد لا يسمح لأي تطبيق بمسح ملفات تطبيقات أخرى، لذلك " +
+                "ملاحظة: أندرويد لا يسمح لأي تطبيق بمسح ملفات تطبيقات أخرى مباشرةً، لذلك " +
                     "التطبيق ينظّف ملفاته المؤقتة، ولو فعّلت التنظيف العميق يمسح الملفات " +
-                    "المؤقتة المتروكة في التخزين.",
+                    "المؤقتة المتروكة في التخزين. وتنظيف كاش كل التطبيقات يتم عن طريق خدمة إمكانية الوصول.",
                 fontSize = 12.sp,
                 lineHeight = 18.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
